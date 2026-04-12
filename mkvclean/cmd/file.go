@@ -20,7 +20,7 @@ var fileCmd = &cobra.Command{
 		// loop through args and clean them
 		err := false
 		for _, path := range args {
-			config.Logger.Echof(echo.DefaultColor, echo.Info, "\nProcessing file: '%v'...\n", path)
+			config.Logger.Echof(echo.DefaultColor, echo.Info, "Processing file: '%v'...\n", path)
 			ok := CleanFile(path)
 			if ok {
 				config.Logger.Echof(echo.Green, echo.Info, "Successfully cleaned file: '%v'\n", path)

@@ -1,0 +1,98 @@
+{
+  "attachments": [],
+  "chapters": [
+    {
+      "num_entries": 1
+    }
+  ],
+  "container": {
+    "properties": {
+      "container_type": 17,
+      "date_local": "2025-10-02T16:34:54+03:00",
+      "date_utc": "2025-10-02T13:34:54Z",
+      "duration": 1338739000000,
+      "is_providing_timestamps": true,
+      "muxing_application": "libebml v1.4.5 + libmatroska v1.7.1",
+      "segment_uid": "d55783a375ae80b3bb6e45bd4f2f9e42",
+      "timestamp_scale": 1000000,
+      "writing_application": "mkvmerge v95.0 ('Goodbye Stranger') 64-bit"
+    },
+    "recognized": true,
+    "supported": true,
+    "type": "Matroska"
+  },
+  "errors": [],
+  "file_name": "Abbott Elementary S01E01.mkv",
+  "global_tags": [],
+  "identification_format_version": 20,
+  "track_tags": [],
+  "tracks": [
+    {
+      "codec": "AVC/H.264/MPEG-4p10",
+      "id": 0,
+      "properties": {
+        "codec_id": "V_MPEG4/ISO/AVC",
+        "codec_private_data": "01640028ffe1001967640028ac562405005ba100000303e90000bb808f1831898001000668e88e113c8f",
+        "codec_private_length": 42,
+        "default_duration": 41708333,
+        "default_track": true,
+        "display_dimensions": "1280x720",
+        "display_unit": 0,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "und",
+        "language_ietf": "und",
+        "minimum_timestamp": 0,
+        "num_index_entries": 361,
+        "number": 1,
+        "packetizer": "mpeg4_p10_video",
+        "pixel_dimensions": "1280x720",
+        "uid": 17968401832663654828
+      },
+      "type": "video"
+    },
+    {
+      "codec": "AAC",
+      "id": 1,
+      "properties": {
+        "audio_channels": 2,
+        "audio_sampling_frequency": 48000,
+        "codec_id": "A_AAC",
+        "codec_private_data": "119056e500",
+        "codec_private_length": 5,
+        "default_duration": 21333333,
+        "default_track": false,
+        "enabled_track": true,
+        "forced_track": false,
+        "language": "eng",
+        "language_ietf": "en",
+        "minimum_timestamp": 9000000,
+        "num_index_entries": 0,
+        "number": 2,
+        "uid": 15583264903024033992
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "SubRip/SRT",
+      "id": 2,
+      "properties": {
+        "codec_id": "S_TEXT/UTF8",
+        "codec_private_length": 0,
+        "default_track": true,
+        "enabled_track": true,
+        "encoding": "UTF-8",
+        "forced_track": false,
+        "language": "eng",
+        "language_ietf": "en",
+        "minimum_timestamp": 1042000000,
+        "num_index_entries": 573,
+        "number": 3,
+        "text_subtitles": true,
+        "uid": 17433115060628207672
+      },
+      "type": "subtitles"
+    }
+  ],
+  "warnings": []
+}
