@@ -1,0 +1,103 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--entryPoints.websecure.http.tls=true"
+
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+
+      - "--ping=true"
+      - "--log.format=json"
+      - "--log.level=INFO"
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "8080:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "./certs:/certs:ro"
+      - "./dynamic:/etc/traefik/dynamic:ro"
+    networks:
+      - internal-proxy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.home.arpa`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+
+      # Basic‑auth middleware
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$BapxfnUp$$yH.D48WbpzPRAPR5Y9Hoc0"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
+
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.6
+    container_name: jellyfin
+    restart: unless-stopped
+    environment:
+      - TZ=Africa/Nairobi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
+    volumes:
+      - "${CACHE}:/cache"
+      - "${CONFIG_JELLY}:/config" # Unique variable to avoid conflict
+      - "${MEDIA}:/media"
+    networks:
+      - internal-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.home.arpa`)"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls=true"
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:2026.04.0
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    environment:
+      TZ: "${TZ}"
+      FTLCONF_webserver_api_password: "${PASSWORD}"
+      FTLCONF_dns_listeningMode: "ALL"
+      FTLCONF_dns_hosts: "${CUSTOM_DNS}"
+    volumes:
+      - "piholeData:/etc/pihole"
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      - internal-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.home.arpa`)"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+
+      - "traefik.http.routers.pihole.entrypoints=websecure"
+      - "traefik.http.routers.pihole.tls=true"
+    healthcheck:
+      test: ["CMD", "pihole", "status"]
+
+networks:
+  internal-proxy:
+    driver: bridge
+
+volumes:
+  piholeData:

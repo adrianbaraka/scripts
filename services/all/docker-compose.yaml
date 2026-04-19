@@ -1,0 +1,64 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.6
+    container_name: jellyfin
+    ports:
+      - "${JELLYFIN_PORT}:8096"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8096/health" ]
+    volumes:
+      - "${JELLYFIN_CACHE}:/cache"
+      - "${JELLYFIN_CONFIG}:/config"
+      - "${JELLYFIN_MEDIA}:/media"
+
+  dozzle:
+    image: amir20/dozzle:v10.4
+    container_name: dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dozzle_data:/data
+    healthcheck:
+      test: [ "CMD", "/dozzle", "healthcheck" ]
+    ports:
+      - "${DOZZLE_PORT}:8080"
+    environment:
+      - DOZZLE_ENABLE_ACTIONS=true
+      - DOZZLE_ENABLE_SHELL=true
+      - TZ="${TZ}"
+      #
+      # Uncomment to enable authentication. See https://dozzle.dev/guide/authentication
+      # - DOZZLE_AUTH_PROVIDER=simple
+
+  drawio:
+    image: jgraph/drawio:29.6.10
+    container_name: drawio
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/ || exit 1" ]
+    environment:
+      - TZ="${TZ}"
+    ports:
+      - "${DRAWIO_PORT}:8080"
+      - "9443:8443"
+    restart: unless-stopped
+
+  komga:
+    image: gotson/komga:1.24.3
+    container_name: komga
+    ports:
+      - "${KOMGA_PORT}:25600"
+    environment:
+      - TZ="${TZ}"
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: "${KOMGA_CONFIG}"
+        target: /config
+      - type: bind
+        source: "${KOMGA_DATA}"
+        target: /data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:25600/actuator/health"]
+
+volumes:
+  dozzle_data:

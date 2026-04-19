@@ -1,0 +1,17 @@
+services:
+  # Komga books
+  komga:
+    image: gotson/komga:1.23.5
+    container_name: komga
+    ports:
+      - 25600:25600
+    environment:
+      - TZ=Africa/Nairobi
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /mnt/media/Media-Server/Configs/komga/config
+        target: /config
+      - type: bind
+        source: /mnt/media/Media-Server/Media/Books
+        target: /data

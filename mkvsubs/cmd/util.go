@@ -48,14 +48,14 @@ func handleFile(filename string) error {
 
 	// handle 7 and 8 first as they are flag based
 	if config.externalSub != "" {
-		config.Logger.Echof(echo.Blue, echo.Info, "Merging  external sub %v to file %v.\n", config.externalSub, filename)
+		config.Logger.Echof(echo.Blue, echo.Info, "\tMerging  external sub %v to file %v.\n", config.externalSub, filename)
 		return handleExtsub(filename, config.externalSub, subinfoList)
 	}
 
 	if config.mergeScan {
 		// name of the external sub
 		externalSub := subs.FileNameNoExtension(filename) + subs.SubExtension(subs.SubText)
-		config.Logger.Echof(echo.Blue, echo.Info, "Checking and merging external sub %v to file %v.\n", externalSub, filename)
+		config.Logger.Echof(echo.Blue, echo.Info, "\tChecking and merging external sub %v to file %v.\n", externalSub, filename)
 		return handleExtsub(filename, externalSub, subinfoList)
 	}
 
@@ -251,6 +251,11 @@ func handleExtsub(mediafile string, subfile string, subinfolist []subs.SubInfo) 
 		return e
 	}
 
+	// if not backup delete the external sub
+	if !config.backup {
+		rmFile(subfile)
+	}
+
 	return handleBackup(newfile, mediafile, newdir)
 
 }
@@ -284,6 +289,7 @@ func moveAndOverwrite(src, dst string) error {
 	if _, err := os.Stat(src); os.IsNotExist(err) {
 		return fmt.Errorf("source file does not exist: %s", src)
 	}
+	config.Logger.Echoln(echo.Blue, echo.Debug, "\tRemoving file: ", dst)
 	err := os.Remove(dst)
 	if err != nil {
 		return err

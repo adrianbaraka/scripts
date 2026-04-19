@@ -1,0 +1,16 @@
+services:
+  # Jellyfin media
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.6
+    container_name: jellyfin
+    ports:
+      - "9086:8096"
+    environment:
+      - TZ=Africa/Nairobi
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8096/health" ]
+    volumes:
+      - "/mnt/061CBD6D1CBD57FF/Media-Server/Configs/jellyfin/cache:/cache"
+      - "/mnt/061CBD6D1CBD57FF/Media-Server/Configs/jellyfin/config:/config"
+      - "/mnt/061CBD6D1CBD57FF/Media-Server/Media:/media"
