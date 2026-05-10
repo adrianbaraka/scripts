@@ -1,0 +1,35 @@
+:8080 {
+	respond /health "OK" 200
+}
+
+hub.home.arpa {
+	reverse_proxy homepage:3000
+}
+
+jellyfin.home.arpa {
+	reverse_proxy jellyfin:8096
+}
+
+dozzle.home.arpa {
+	reverse_proxy dozzle:8080
+}
+
+beszel.home.arpa {
+	reverse_proxy beszel:8090
+}
+
+uptime.home.arpa {
+	reverse_proxy uptime-kuma:3001
+}
+
+pihole.home.arpa {
+	reverse_proxy pihole:80
+}
+
+kavita.home.arpa {
+	reverse_proxy kavita:5000
+}
+
+portainer.home.arpa {
+	reverse_proxy portainer:9000
+}

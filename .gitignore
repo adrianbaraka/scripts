@@ -1,6 +1,7 @@
 *.out
 .env
 .env.local
+*.crt
 /services/scrutiny/config
 /services/scrutiny/influxdb
 /services/traefik-all/certs

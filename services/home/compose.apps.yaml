@@ -1,0 +1,101 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.6
+    container_name: jellyfin
+    ports:
+      - "${JELLYFIN_PORT}:8096"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    networks:
+      - home
+    volumes:
+      - "${JELLYFIN_CACHE}:/cache"
+      - "${JELLYFIN_CONFIG}:/config"
+      - "${JELLYFIN_MEDIA}:/media"
+
+  kavita:
+    image: jvmilazz0/kavita:nightly-0.9.0
+    container_name: kavita
+    volumes:
+      - "${KAVITA_DATA}:/books"
+      - "${KAVITA_CONFIG}:/kavita/config"
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "${KAVITA_PORT}:5000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    networks:
+      - home
+
+  caddy:
+    image: caddy:2.11.2
+    container_name: caddy
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      CADDY_ADMIN: "0.0.0.0:2019"
+      TZ: ${TZ}
+    volumes:
+      - ./files/Caddyfile:/etc/caddy/Caddyfile
+      - ${CADDY_DATA}:/data
+      - caddy_config:/config
+    healthcheck:
+      # create an endpoint in caddyfile
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    networks:
+      - home
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:2026.04.0
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    environment:
+      TZ: ${TZ}
+      FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD}"
+      FTLCONF_dns_listeningMode: "ALL"
+      FTLCONF_misc_dnsmasq_lines: |-
+        address=/${DOMAIN}/${TAILSCALE_IP}
+      #FTLCONF_dns_hosts: "${CUSTOM_DNS}"
+    volumes:
+      - "piholeData:/etc/pihole"
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      - home
+    healthcheck:
+      test: ["CMD", "pihole", "status"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  caddy_config:
+  piholeData:
+
+networks:
+  home:
+    external: true

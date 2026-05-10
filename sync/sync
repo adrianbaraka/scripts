@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+#log file
+#LOGDIR="${HOME}/.local/state/sync"
+#mkdir -p "$LOGDIR"
+#LOGFILE="${LOGDIR}/sync.log"
+
+# print the usage message
+usage() {
+	cat <<-EOF
+	A CLI tool to sync the contents of two directories using rsync.
+	Usage:
+	    sync [src] [dst]
+	
+	Flags:
+	    -h	Print the help message and exit.
+	    -d	Dry run.
+	EOF
+}
+
+main(){
+	dryRun=false
+	# parse CLI flags
+	while getopts "hd" opt; do
+		case "$opt" in
+			h)
+				usage
+				exit 0
+			;;
+			d)
+				dryRun=true
+			;;
+			*)
+				usage
+				exit 1
+		esac
+	done
+
+	shift $((OPTIND - 1))
+	
+	if (($# != 2)); then 
+		echo "[Error]. Two positional arguements required got $#." >&2
+		usage
+		exit 1
+	fi
+
+	SRC="$1"
+	DST="$2"
+	LOCKFILE="/tmp/sync_script.lock"
+
+    # Use a lockfile so scripts don't overlap
+    exec 3>"$LOCKFILE"
+	trap 'rm -f "$LOCKFILE"' EXIT #remove the file on exit
+	if ! flock -n 3; then
+		echo "Another sync is already running." >&2
+		exit 1
+	fi
+
+	#printf "%(%c)T | Started Sync | Source = '%s', Destination = '%s' \n" -1 "$SRC" "$DST" | tee -a "$LOGFILE" 
+	printf "%(%c)T | Started Sync | Source = '%s', Destination = '%s' \n" -1 "$SRC" "$DST"
+
+
+	args=(
+        -az
+        --progress
+		--filter=':- .rsyncignore'
+    )
+
+	if [[ "$dryRun" == "true" ]]; then
+		args+=(--dry-run)
+	fi
+
+	rsync "${args[@]}" "$SRC" "$DST" || exit 1
+		
+	printf "%(%c)T | End Sync | Source = '%s', Destination = '%s' \n" -1 "$SRC" "$DST"
+}
+
+main "$@"

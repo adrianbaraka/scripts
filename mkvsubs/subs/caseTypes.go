@@ -5,6 +5,7 @@ type SubCase int
 const (
 	CaseNoSubtitles SubCase = iota
 	CaseAlreadySubRip
+	CaseAlreadySubRipOthersPresent
 	CaseConvertSSA
 	CaseImageBased
 	CaseUnknownType
@@ -17,7 +18,9 @@ func (c SubCase) String() string {
 	case CaseNoSubtitles:
 		return "No subtitles found in file"
 	case CaseAlreadySubRip:
-		return "Subtitle is already in SubRip (SRT) format"
+		return "Subtitle is already in SubRip (SRT) format and it is the only one."
+	case CaseAlreadySubRipOthersPresent:
+		return "Subtitle is already in SubRip (SRT) format and it is not the only one."
 	case CaseConvertSSA:
 		return "Substation Alpha (SSA/ASS) detected."
 	case CaseImageBased:
@@ -54,6 +57,9 @@ func DetermineCase(info []SubInfo, subnum int) SubCase {
 	}
 	switch requiredSub.Type {
 	case SubText:
+		if len(info) > 1 {
+			return CaseAlreadySubRipOthersPresent
+		}
 		return CaseAlreadySubRip
 	case SubRich:
 		return CaseConvertSSA

@@ -6,6 +6,7 @@ import (
 	"mkvsubs/subs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -63,6 +64,9 @@ func handleFile(filename string) error {
 	case subs.CaseNoSubtitles:
 		m := fmt.Sprintln("\t", filename+". "+subtitleCase.String())
 		return fmt.Errorf("%v", m)
+	case subs.CaseAlreadySubRipOthersPresent:
+		config.Logger.Echoln(echo.Green, echo.Info, "\t", filename+". "+subtitleCase.String())
+		return keepPassedSub(filename, requiredSub.TrackId)
 	case subs.CaseAlreadySubRip:
 		config.Logger.Echoln(echo.Green, echo.Info, "\t", filename+". "+subtitleCase.String())
 		return nil
@@ -333,6 +337,36 @@ func delAllSubs(filename string) error {
 	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmergeExe, strings.Join(args, " "))
 
 	// remove all subs
+	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmergeExe, args...)
+
+	stringres := strings.Join(res, "\n")
+	if err != nil && exitCode != 1 {
+		return fmt.Errorf("%v", stringres)
+	}
+	config.Logger.Echoln(echo.Green, echo.Debug, stringres)
+	success("\tMultiplexed  to new file", newMediafile)
+
+	return handleBackup(newMediafile, filename, cleanDir)
+}
+
+// keeps the passed subtitle of trackid only delete all others.
+func keepPassedSub(filename string, trackId int) error {
+	//self.mkvmerge,"--output", f"{self.clean_dir}/{self.file_name}", "--subtitle-tracks", f"{self.sub_num}", "--default-track", f"{self.sub_num}:yes", self.file
+	newMediafile, cleanDir, e := makeCleanDir(filename)
+	if e != nil {
+		return e
+	}
+	args := []string{
+		"--output", newMediafile,
+	}
+	args = append(args, "--subtitle-tracks", strconv.Itoa(trackId))
+	args = append(args, "--default-track")
+	args = append(args, fmt.Sprintf("%v:yes", trackId))
+	//main video file
+	args = append(args, filename)
+
+	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmergeExe, strings.Join(args, " "))
+
 	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmergeExe, args...)
 
 	stringres := strings.Join(res, "\n")

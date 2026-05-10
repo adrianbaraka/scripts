@@ -1,0 +1,25 @@
+services:
+  beszel-agent:
+    image: henrygd/beszel-agent:0.18.7
+    container_name: beszel-agent
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # systemd
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro
+      # monitor disks
+      - /mnt/061CBD6D1CBD57FF:/extra-filesystems/sda1-data:ro
+      - /mnt/FE4E6AD04E6A816F:/extra-filesystems/sda2-recovery:ro
+      - /mnt/98A6A420A6A4013C:/extra-filesystems/sdb3-storage:ro
+    environment:
+      LISTEN: ${BESZEL_LISTEN}
+      KEY: ${BESZEL_KEY}
+      TOKEN: ${BESZEL_TOKEN}
+      HUB_URL: "http://${TAILSCALE_IP}:8090"
+    healthcheck:
+      test: [ "CMD", "/agent", "health" ]
+      interval: 2m
+      timeout: 30s
+      retries: 3
+      start_period: 30s
