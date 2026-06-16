@@ -17,6 +17,7 @@ services:
       KEY: ${BESZEL_KEY}
       TOKEN: ${BESZEL_TOKEN}
       HUB_URL: "http://${TAILSCALE_IP}:8090"
+      #HUB_URL: "https://beszel.${DOMAIN}"
     healthcheck:
       test: [ "CMD", "/agent", "health" ]
       interval: 2m

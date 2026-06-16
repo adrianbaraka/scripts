@@ -1,0 +1,10 @@
+FROM caddy:2.11.2-builder AS builder
+
+
+# build with dns exit
+RUN xcaddy build --with github.com/caddy-dns/dnsexit@1.0.0-beta.1
+
+
+FROM caddy:2.11.2
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy

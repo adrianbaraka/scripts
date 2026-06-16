@@ -1,0 +1,5 @@
+services:
+  debian:
+    image: debian:13.4
+    container_name: debian
+    entrypoint: ["tail", "-f", "/dev/null"]

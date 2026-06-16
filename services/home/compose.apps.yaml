@@ -1,6 +1,6 @@
 services:
   jellyfin:
-    image: jellyfin/jellyfin:10.11.6
+    image: jellyfin/jellyfin:10.11.8
     container_name: jellyfin
     ports:
       - "${JELLYFIN_PORT}:8096"
@@ -13,21 +13,26 @@ services:
       start_period: 30s
     networks:
       - home
+    environment:
+      - LIBVA_DRIVER_NAME=iHD
     volumes:
       - "${JELLYFIN_CACHE}:/cache"
       - "${JELLYFIN_CONFIG}:/config"
       - "${JELLYFIN_MEDIA}:/media"
-
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    group_add:
+      - "992" #`getent group render`
   kavita:
-    image: jvmilazz0/kavita:nightly-0.9.0
+    image: jvmilazz0/kavita:0.9.0.2
     container_name: kavita
     volumes:
       - "${KAVITA_DATA}:/books"
       - "${KAVITA_CONFIG}:/kavita/config"
     environment:
       - TZ=${TZ}
-    ports:
-      - "${KAVITA_PORT}:5000"
+    #ports:
+    #  - "${KAVITA_PORT}:5000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
@@ -39,7 +44,7 @@ services:
       - home
 
   caddy:
-    image: caddy:2.11.2
+    image: adrianbaraka/caddy-dnsexit:2.11.2
     container_name: caddy
     restart: unless-stopped
     cap_add:
@@ -51,6 +56,9 @@ services:
     environment:
       CADDY_ADMIN: "0.0.0.0:2019"
       TZ: ${TZ}
+      DNS_EXIT_TOKEN: ${DNS_EXIT_TOKEN}
+      DOMAIN: ${DOMAIN}
+      EMAIL: ${EMAIL}
     volumes:
       - ./files/Caddyfile:/etc/caddy/Caddyfile
       - ${CADDY_DATA}:/data
@@ -67,7 +75,7 @@ services:
 
   pihole:
     container_name: pihole
-    image: pihole/pihole:2026.04.0
+    image: pihole/pihole:2026.05.0
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -79,7 +87,7 @@ services:
         address=/${DOMAIN}/${TAILSCALE_IP}
       #FTLCONF_dns_hosts: "${CUSTOM_DNS}"
     volumes:
-      - "piholeData:/etc/pihole"
+      - "${PIHOLE_DATA}:/etc/pihole"
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
@@ -92,9 +100,18 @@ services:
       retries: 3
       start_period: 30s
 
+  linkding:
+    container_name: "linkding"
+    image: sissbruecker/linkding:1.45.0-alpine
+    # ports:
+    #   - "${LD_HOST_PORT:-9090}:9090"
+    networks:
+      - home
+    volumes:
+      - "${LD_DATA}:/etc/linkding/data"
+    restart: unless-stopped
 volumes:
   caddy_config:
-  piholeData:
 
 networks:
   home:

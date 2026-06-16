@@ -1,7 +1,7 @@
 - Media:
       - Jellyfin:
             icon: jellyfin.png
-            href: https://jellyfin.home.arpa
+            href: https://jellyfin.{{HOMEPAGE_VAR_DOMAIN}}
             description: Media Server
             container: jellyfin
             widget:
@@ -15,7 +15,7 @@
                 expandOneStreamToTwoRows: false
       - Kavita:
             icon: kavita.png
-            href: https://kavita.home.arpa/login
+            href: https://kavita.{{HOMEPAGE_VAR_DOMAIN}}/login
             description: Kavita is a fast, feature rich, cross-platform reading server.
             container: kavita
             widget:
@@ -30,6 +30,11 @@
                   type: tailscale
                   deviceid: nCXxz9Rzj611CNTRL
                   key: {{HOMEPAGE_VAR_TS_API_KEY}}
+      - Linkding:
+            icon: linkding.png
+            container: linkding
+            description: Bookmark manager
+            href: https://linkding.{{HOMEPAGE_VAR_DOMAIN}}
       - Caddy:
             icon: caddy.png
             container: caddy
@@ -37,10 +42,11 @@
                 type: caddy
                 url: http://caddy:2019
 
+
 - Management:
       - Beszel:
             icon: beszel.png
-            href: https://beszel.home.arpa
+            href: https://beszel.{{HOMEPAGE_VAR_DOMAIN}}
             description: Resource Monitoring
             container: beszel
             widget:
@@ -51,17 +57,17 @@
                 version: 2
       - Dozzle:
             icon: dozzle.png
-            href: https://dozzle.home.arpa
+            href: https://dozzle.{{HOMEPAGE_VAR_DOMAIN}}
             description: Container Logs
             container: dozzle
       - Uptime Kuma:
             icon: uptime-kuma.png
-            href: https://uptime.home.arpa
+            href: https://uptime.{{HOMEPAGE_VAR_DOMAIN}}
             description: Status Monitoring
             container: uptime-kuma
       - pihole:
             icon: pi-hole.png
-            href: https://pihole.home.arpa/admin
+            href: https://pihole.{{HOMEPAGE_VAR_DOMAIN}}/admin
             description: DNS
             container: pihole
             widget:
@@ -72,7 +78,7 @@
 
       - portainer:
             icon: portainer.png
-            href: https://portainer.home.arpa
+            href: https://portainer.{{HOMEPAGE_VAR_DOMAIN}}
             description: Container Management
             container: portainer
             widget:

@@ -1,28 +1,30 @@
 services:
     dozzle:
-        image: amir20/dozzle:v10.4
+        image: amir20/dozzle:v10.5.3
         container_name: dozzle
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - dozzle_data:/data
+            - ${dozzle_data}:/data
         healthcheck:
             test: ["CMD", "/dozzle", "healthcheck"]
             interval: 2m
             timeout: 30s
             retries: 3
             start_period: 30s
-        ports:
-            - "${DOZZLE_PORT}:8080"
+        # ports:
+        #     - "${DOZZLE_PORT}:8080"
+
         restart: unless-stopped
         networks:
             - home
         environment:
             - DOZZLE_ENABLE_ACTIONS=true
             - DOZZLE_ENABLE_SHELL=true
+
             - TZ="${TZ}"
             #
             # Uncomment to enable authentication. See https://dozzle.dev/guide/authentication
-            # - DOZZLE_AUTH_PROVIDER=simple
+            #- DOZZLE_AUTH_PROVIDER=simple
 
     beszel:
         image: henrygd/beszel:0.18.7
@@ -48,8 +50,8 @@ services:
         image: louislam/uptime-kuma:2.2.1-slim
         container_name: uptime-kuma
         restart: unless-stopped
-        ports:
-            - "${UK_PORT}:3001"
+        # ports:
+        #     - "${UK_PORT}:3001"
         volumes:
             - ${UK_DATA}:/app/data
         networks:
@@ -70,7 +72,7 @@ services:
                 max-file: "3"
 
     homepage:
-        image: ghcr.io/gethomepage/homepage:v1.13.0
+        image: ghcr.io/gethomepage/homepage:v1.13.1
         container_name: homepage
         environment:
             - HOMEPAGE_VAR_JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
@@ -81,8 +83,9 @@ services:
             - HOMEPAGE_VAR_TS_API_KEY=${HOMEPAGE_VAR_TS_API_KEY}
             - HOMEPAGE_VAR_PORTAINER=${HOMEPAGE_VAR_PORTAINER}
             - HOMEPAGE_ALLOWED_HOSTS=${HP_ALLOWED_HOSTS}
-        ports:
-            - 9001:3000
+            - HOMEPAGE_VAR_DOMAIN=${DOMAIN}
+        # ports:
+        #     - 9001:3000
         volumes:
             - ./files/services.yaml:/app/config/services.yaml
             - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -91,7 +94,7 @@ services:
         restart: unless-stopped
 
     portainer:
-        image: portainer/portainer-ce:2.39.2-alpine
+        image: portainer/portainer-ce:2.41.1-alpine
         container_name: portainer
         restart: unless-stopped
         security_opt:
@@ -100,8 +103,8 @@ services:
             - /etc/localtime:/etc/localtime:ro
             - /var/run/docker.sock:/var/run/docker.sock:ro
             - ${portainer_data}:/data
-        ports:
-            - 9002:9000
+            # ports:
+            #     - 9002:9000
         networks:
             home:
         healthcheck:

@@ -64,6 +64,7 @@ main(){
         -az
         --progress
 		--filter=':- .rsyncignore'
+		# --delete
     )
 
 	if [[ "$dryRun" == "true" ]]; then
