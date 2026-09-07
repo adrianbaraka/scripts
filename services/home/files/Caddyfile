@@ -15,7 +15,14 @@
 		dns dnsexit {
 			api_token {$DNS_EXIT_TOKEN}
 		}
+		dns_ttl 5m
+		resolvers 1.1.1.1 8.8.8.8
 	}
+	# access logs
+	# log {
+	# 	output stdout
+	# 	format json
+	# }
 	# Homepage
 	@homepage host homepage.{$DOMAIN}
 	handle @homepage {
@@ -43,7 +50,7 @@
 	# Uptime Kuma
 	@uptime host uptime.{$DOMAIN}
 	handle @uptime {
-		reverse_proxy uptime-kuma:3001
+		reverse_proxy ts-uptime-kuma:3001
 	}
 
 	# Pi-hole
@@ -64,9 +71,9 @@
 		reverse_proxy portainer:9000
 	}
 
-	@linkding host linkding.{$DOMAIN}
-	handle @linkding {
-		reverse_proxy linkding:9090
+	@base host base.{$DOMAIN}
+	handle @base {
+		reverse_proxy base-frontend:3000
 	}
 
 	# Fallback for undefined subdomains

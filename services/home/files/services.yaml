@@ -28,13 +28,8 @@
             href: https://login.tailscale.com/admin/machines
             widget:
                   type: tailscale
-                  deviceid: nCXxz9Rzj611CNTRL
+                  deviceid: {{HOMEPAGE_VAR_TS_ID}}
                   key: {{HOMEPAGE_VAR_TS_API_KEY}}
-      - Linkding:
-            icon: linkding.png
-            container: linkding
-            description: Bookmark manager
-            href: https://linkding.{{HOMEPAGE_VAR_DOMAIN}}
       - Caddy:
             icon: caddy.png
             container: caddy

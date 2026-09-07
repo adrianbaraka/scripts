@@ -1,6 +1,6 @@
 services:
     dozzle:
-        image: amir20/dozzle:v10.5.3
+        image: amir20/dozzle:v10.6.10
         container_name: dozzle
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
@@ -46,6 +46,23 @@ services:
             retries: 3
             start_period: 30s
 
+    ts-uptime-kuma:
+        image: tailscale/tailscale:v1.102.2
+        container_name: ts-uptime-kuma
+        hostname: uptime-kuma
+        environment:
+            - TS_AUTHKEY=${TS_AUTHKEY}
+            - TS_STATE_DIR=/var/lib/tailscale
+        volumes:
+            - ${TS_UK_STATE}:/var/lib/tailscale
+            - /dev/net/tun:/dev/net/tun
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW
+        restart: unless-stopped
+        networks:
+            - home
+
     uptime-kuma:
         image: louislam/uptime-kuma:2.2.1-slim
         container_name: uptime-kuma
@@ -54,8 +71,7 @@ services:
         #     - "${UK_PORT}:3001"
         volumes:
             - ${UK_DATA}:/app/data
-        networks:
-            - home
+        network_mode: "service:ts-uptime-kuma"
         environment:
             - TZ=${TZ}
             - UMASK=0022
@@ -70,6 +86,8 @@ services:
             options:
                 max-size: "10m"
                 max-file: "3"
+        depends_on:
+            - ts-uptime-kuma
 
     homepage:
         image: ghcr.io/gethomepage/homepage:v1.13.1
@@ -84,6 +102,7 @@ services:
             - HOMEPAGE_VAR_PORTAINER=${HOMEPAGE_VAR_PORTAINER}
             - HOMEPAGE_ALLOWED_HOSTS=${HP_ALLOWED_HOSTS}
             - HOMEPAGE_VAR_DOMAIN=${DOMAIN}
+            - HOMEPAGE_VAR_TS_ID=${HOMEPAGE_VAR_TS_ID}
         # ports:
         #     - 9001:3000
         volumes:

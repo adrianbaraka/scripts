@@ -1,6 +1,6 @@
 services:
   jellyfin:
-    image: jellyfin/jellyfin:10.11.8
+    image: jellyfin/jellyfin:10.11.11
     container_name: jellyfin
     ports:
       - "${JELLYFIN_PORT}:8096"
@@ -31,8 +31,8 @@ services:
       - "${KAVITA_CONFIG}:/kavita/config"
     environment:
       - TZ=${TZ}
-    #ports:
-    #  - "${KAVITA_PORT}:5000"
+    ports:
+    - "${KAVITA_PORT}:5000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
@@ -49,10 +49,11 @@ services:
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
+    #network_mode: host
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+       - "80:80"
+       - "443:443"
+       - "443:443/udp"
     environment:
       CADDY_ADMIN: "0.0.0.0:2019"
       TZ: ${TZ}
@@ -62,7 +63,7 @@ services:
     volumes:
       - ./files/Caddyfile:/etc/caddy/Caddyfile
       - ${CADDY_DATA}:/data
-      - caddy_config:/config
+      - ${CADDY_CONFIG}:/config
     healthcheck:
       # create an endpoint in caddyfile
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
@@ -75,7 +76,7 @@ services:
 
   pihole:
     container_name: pihole
-    image: pihole/pihole:2026.05.0
+    image: pihole/pihole:2026.07.2
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -99,20 +100,6 @@ services:
       timeout: 30s
       retries: 3
       start_period: 30s
-
-  linkding:
-    container_name: "linkding"
-    image: sissbruecker/linkding:1.45.0-alpine
-    # ports:
-    #   - "${LD_HOST_PORT:-9090}:9090"
-    networks:
-      - home
-    volumes:
-      - "${LD_DATA}:/etc/linkding/data"
-    restart: unless-stopped
-volumes:
-  caddy_config:
-
 networks:
   home:
     external: true

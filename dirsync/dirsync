@@ -10,7 +10,7 @@ usage() {
 	cat <<-EOF
 	A CLI tool to sync the contents of two directories using rsync.
 	Usage:
-	    sync [src] [dst]
+	    dirsync [src] [dst]
 	
 	Flags:
 	    -h	Print the help message and exit.
