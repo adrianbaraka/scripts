@@ -13,14 +13,10 @@ services:
       start_period: 30s
     networks:
       - home
-    environment:
-      - LIBVA_DRIVER_NAME=iHD
     volumes:
       - "${JELLYFIN_CACHE}:/cache"
       - "${JELLYFIN_CONFIG}:/config"
       - "${JELLYFIN_MEDIA}:/media"
-    devices:
-      - /dev/dri/renderD128:/dev/dri/renderD128
     group_add:
       - "992" #`getent group render`
   kavita:
@@ -32,7 +28,7 @@ services:
     environment:
       - TZ=${TZ}
     ports:
-    - "${KAVITA_PORT}:5000"
+      - "${KAVITA_PORT}:5000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
@@ -51,9 +47,9 @@ services:
       - NET_ADMIN
     #network_mode: host
     ports:
-       - "80:80"
-       - "443:443"
-       - "443:443/udp"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
     environment:
       CADDY_ADMIN: "0.0.0.0:2019"
       TZ: ${TZ}
@@ -73,33 +69,6 @@ services:
       start_period: 30s
     networks:
       - home
-
-  pihole:
-    container_name: pihole
-    image: pihole/pihole:2026.07.2
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-    environment:
-      TZ: ${TZ}
-      FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD}"
-      FTLCONF_dns_listeningMode: "ALL"
-      FTLCONF_misc_dnsmasq_lines: |-
-        address=/${DOMAIN}/${TAILSCALE_IP}
-      #FTLCONF_dns_hosts: "${CUSTOM_DNS}"
-    volumes:
-      - "${PIHOLE_DATA}:/etc/pihole"
-    cap_add:
-      - NET_ADMIN
-    restart: unless-stopped
-    networks:
-      - home
-    healthcheck:
-      test: ["CMD", "pihole", "status"]
-      interval: 1m
-      timeout: 30s
-      retries: 3
-      start_period: 30s
 networks:
   home:
     external: true

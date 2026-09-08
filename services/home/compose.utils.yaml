@@ -1,4 +1,30 @@
 services:
+    pihole:
+        container_name: pihole
+        image: pihole/pihole:2026.07.2
+        ports:
+            - "53:53/tcp"
+            - "53:53/udp"
+        environment:
+            TZ: ${TZ}
+            FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD}"
+            FTLCONF_dns_listeningMode: "ALL"
+            FTLCONF_misc_dnsmasq_lines: |-
+                address=/${DOMAIN}/${TAILSCALE_IP}
+            #FTLCONF_dns_hosts: "${CUSTOM_DNS}"
+        volumes:
+            - "${PIHOLE_DATA}:/etc/pihole"
+        cap_add:
+            - NET_ADMIN
+        restart: unless-stopped
+        networks:
+            - home
+        healthcheck:
+            test: ["CMD", "pihole", "status"]
+            interval: 1m
+            timeout: 30s
+            retries: 3
+            start_period: 30s
     dozzle:
         image: amir20/dozzle:v10.6.10
         container_name: dozzle

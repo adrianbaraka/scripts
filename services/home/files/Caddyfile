@@ -2,6 +2,7 @@
 {
 	# dns email
 	email {$EMAIL}
+	debug	
 }
 
 # health check
@@ -19,10 +20,11 @@
 		resolvers 1.1.1.1 8.8.8.8
 	}
 	# access logs
-	# log {
-	# 	output stdout
-	# 	format json
-	# }
+	log {
+		output stdout
+		format json
+		level debug
+	}
 	# Homepage
 	@homepage host homepage.{$DOMAIN}
 	handle @homepage {
@@ -74,10 +76,5 @@
 	@base host base.{$DOMAIN}
 	handle @base {
 		reverse_proxy base-frontend:3000
-	}
-
-	# Fallback for undefined subdomains
-	handle {
-		abort
 	}
 }
