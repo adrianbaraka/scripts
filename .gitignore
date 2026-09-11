@@ -5,3 +5,4 @@
 /services/scrutiny/config
 /services/scrutiny/influxdb
 /services/traefik-all/certs
+services/home/update-dns.log

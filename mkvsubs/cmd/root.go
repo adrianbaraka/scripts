@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"slices"
 
 	"github.com/adrianbaraka/goutils/cli"
@@ -11,24 +10,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func mkvpath(exe string) string {
-	if runtime.GOOS == "windows" {
-		return exe + ".exe"
-	}
-	return exe
-}
-
 var (
 	verbosityCount int
 	quiet          bool
 	color          string
 )
 
+type tool struct {
+	exe  string
+	site string
+}
+
 type AppConfig struct {
 	Logger         *echo.Logger
 	Runner         *cli.RunCmdConfig
-	mkvmergeExe    string
-	mkvextractExe  string
+	mkvmerge       tool
+	mkvextract  tool
 	subtitleNumber int
 	delay          int
 	dryRun         bool
@@ -79,6 +76,9 @@ var rootCmd = &cobra.Command{
 			os.Setenv("NO_COLOR", "true")
 		}
 
+		config.mkvmerge = newTool("mkvmerge", "https://mkvtoolnix.download/downloads.html")
+		config.mkvextract = newTool("mkvextract", "https://mkvtoolnix.download/downloads.html")
+
 		config.Logger = echo.NewLogger(verbosity, os.Stdout)
 		// the mktoolinix clis dont write errors to stderr so can't stream output in color so either color or stream but not both
 		config.Runner = cli.NewRunner(verbosity, false, true, false)
@@ -106,8 +106,4 @@ func init() {
 	rootCmd.RegisterFlagCompletionFunc("color", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return allowedColors, cobra.ShellCompDirectiveNoFileComp
 	})
-
-	rootCmd.PersistentFlags().StringVar(&config.mkvmergeExe, "mkvmerge", mkvpath("mkvmerge"), "Path to the mkvmerge executable if it is not in the $PATH")
-	rootCmd.PersistentFlags().StringVar(&config.mkvextractExe, "mkvextract", mkvpath("mkvextract"), "Path to the mkvextract executable if it is not in the $PATH")
-
 }

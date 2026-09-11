@@ -10,6 +10,13 @@ import (
 var processCmd = &cobra.Command{
 	Use:   "process",
 	Short: "Process video file(s) to clean or merge subtitles",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+		var tools []tool
+		tools = append(tools, config.mkvmerge)
+		tools = append(tools, config.mkvextract)
+		verifyTools(tools)
+	},
 }
 
 func init() {
@@ -28,10 +35,4 @@ func init() {
 	processCmd.PersistentFlags().BoolVar(&config.keepOthersubs, "keep-other-subs", false, "If the file has more than one subtitle track preserve them.")
 
 	processCmd.PersistentFlags().BoolVar(&config.mergeScan, "merge-scan", false, "Search for an external subtitle matching the filename. If not found nothing is done to the media file.")
-
-	processCmd.PersistentFlags().StringVar(&config.externalSub, "external-sub", "", "The path to an external sutitle file to merge.")
-	processCmd.RegisterFlagCompletionFunc("external-sub", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		// suggest srt files
-		return []string{"srt"}, cobra.ShellCompDirectiveFilterFileExt
-	})
 }

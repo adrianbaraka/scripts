@@ -2,7 +2,7 @@
 {
 	# dns email
 	email {$EMAIL}
-	debug	
+	# debug	
 }
 
 # health check
@@ -20,11 +20,11 @@
 		resolvers 1.1.1.1 8.8.8.8
 	}
 	# access logs
-	log {
-		output stdout
-		format json
-		level debug
-	}
+	# log {
+	# 	output stdout
+	# 	format json
+	# 	level debug
+	# }
 	# Homepage
 	@homepage host homepage.{$DOMAIN}
 	handle @homepage {
@@ -71,10 +71,5 @@
 	@portainer host portainer.{$DOMAIN}
 	handle @portainer {
 		reverse_proxy portainer:9000
-	}
-
-	@base host base.{$DOMAIN}
-	handle @base {
-		reverse_proxy base-frontend:3000
 	}
 }

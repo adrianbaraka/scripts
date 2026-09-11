@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"mkvsubs/subs"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -99,8 +101,8 @@ func getsubInfo(filename string) ([]byte, error) {
 	args := []string{
 		"--identification-format", "json", "--identify", filename,
 	}
-	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command: ", config.mkvmergeExe, strings.Join(args, " "))
-	res, err, exitCode := config.Runner.RunCmd(echo.Trace, config.mkvmergeExe, args...)
+	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command: ", config.mkvmerge.exe, strings.Join(args, " "))
+	res, err, exitCode := config.Runner.RunCmd(echo.Trace, config.mkvmerge.exe, args...)
 
 	stringres := strings.Join(res, "\n")
 	resBytes := []byte(stringres)
@@ -171,7 +173,7 @@ func extractSSA(filename string, info subs.SubInfo) (string, error) {
 	subname := fmt.Sprintf("%v:%v", info.TrackId, newSub)
 	//fmt.Println(subname)
 
-	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvextractExe, filename, "tracks", subname)
+	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvextract.exe, filename, "tracks", subname)
 	stringres := strings.Join(res, "\n")
 	if err != nil && exitCode != 1 {
 		return "", fmt.Errorf("%v", stringres)
@@ -233,9 +235,9 @@ func mergeExternalSRT(mediafile string, subfile string, subinfolist []subs.SubIn
 	args = append(args, "--default-track-flag", "0:yes", "--forced-display-flag", "0:yes", subfile)
 
 	// TODO dry run
-	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmergeExe, strings.Join(args, " "))
+	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmerge.exe, strings.Join(args, " "))
 	// merge the sub
-	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmergeExe, args...)
+	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmerge.exe, args...)
 
 	stringres := strings.Join(res, "\n")
 	if err != nil && exitCode != 1 {
@@ -334,10 +336,10 @@ func delAllSubs(filename string) error {
 	//main video file
 	args = append(args, filename)
 
-	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmergeExe, strings.Join(args, " "))
+	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmerge.exe, strings.Join(args, " "))
 
 	// remove all subs
-	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmergeExe, args...)
+	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmerge.exe, args...)
 
 	stringres := strings.Join(res, "\n")
 	if err != nil && exitCode != 1 {
@@ -365,9 +367,9 @@ func keepPassedSub(filename string, trackId int) error {
 	//main video file
 	args = append(args, filename)
 
-	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmergeExe, strings.Join(args, " "))
+	config.Logger.Echoln(echo.Blue, echo.Trace, "Running the command:", config.mkvmerge.exe, strings.Join(args, " "))
 
-	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmergeExe, args...)
+	res, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvmerge.exe, args...)
 
 	stringres := strings.Join(res, "\n")
 	if err != nil && exitCode != 1 {
@@ -377,4 +379,36 @@ func keepPassedSub(filename string, trackId int) error {
 	success("\tMultiplexed  to new file", newMediafile)
 
 	return handleBackup(newMediafile, filename, cleanDir)
+}
+
+// return OS specific executable name
+// also
+func getExe(executable string) string {
+	if runtime.GOOS == "windows" {
+		return fmt.Sprintf("%v.exe", executable)
+	}
+	return executable
+}
+
+func newTool(name, site string) tool {
+	return tool{exe: getExe(name), site: site}
+}
+
+// Loops through the list if any executable is not found in the system path it is logged and the script exits with a 1 failure.
+func verifyTools(tools []tool) {
+	notFound := false
+
+	for _, t := range tools {
+		path, err := exec.LookPath(t.exe)
+		if err != nil {
+			config.Logger.Fechof(echo.Red, echo.Error, os.Stderr, "'%v' not found. Check '%v' for installation instructions.\n", t.exe, t.site)
+			notFound = true
+		} else {
+			config.Logger.Echof(echo.Green, echo.Debug, "'%v' found in system path at '%v'.\n", t.exe, path)
+		}
+	}
+
+	if notFound {
+		os.Exit(1)
+	}
 }

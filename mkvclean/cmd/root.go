@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"slices"
 
 	"github.com/adrianbaraka/goutils/cli"
@@ -19,23 +18,23 @@ var (
 	color          string
 )
 
+type tool struct {
+	exe  string
+	site string
+}
+
 type AppConfig struct {
-	Logger         *echo.Logger
-	Runner         *cli.RunCmdConfig
-	mkvpropeditExe string
-	language       string
+	Logger      *echo.Logger
+	Runner      *cli.RunCmdConfig
+	mkvpropedit tool
+	language    string
+	dryRun      bool
+	backup      bool
 }
 
 var config AppConfig
 
 var allowedColors = []string{"always", "auto", "never"}
-
-func mkvpath() string {
-	if runtime.GOOS == "windows" {
-		return "mkvpropedit.exe"
-	}
-	return "mkvpropedit"
-}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -48,8 +47,8 @@ It recursively (or individually) processes files to remove:
   - Global tags and statistics
 
 Example:
-  mkvclean file movie.mkv
-  mkvclean folder ./movies --color never`,
+  mkvclean process file movie.mkv
+  mkvclean process folder ./movies --color never`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//TODO conf the help files
@@ -80,7 +79,7 @@ Example:
 		config.Logger = echo.NewLogger(verbosity, os.Stdout)
 		config.Runner = cli.NewRunner(verbosity, false, true, false)
 
-		config.mkvpropeditExe = mkvpropeditexe
+		config.mkvpropedit = newTool("mkvpropedit", "https://mkvtoolnix.download/downloads.html")
 		config.language = language
 
 		return nil
@@ -103,8 +102,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "Decrease verbosity level to only errors.")
 	// mark verbose and quiet as mutually exclusive
 	rootCmd.MarkFlagsMutuallyExclusive("verbose", "quiet")
-
-	rootCmd.PersistentFlags().StringVarP(&mkvpropeditexe, "mkvpropedit", "m", mkvpath(), "Path to the mkvpropedit executable if it is not in the $PATH")
 
 	rootCmd.PersistentFlags().StringVarP(&language, "language", "l", "en", "The language of the first audio track. See https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes")
 

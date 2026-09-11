@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/adrianbaraka/goutils/echo"
@@ -38,7 +40,7 @@ func CleanFile(file string) bool {
 	}
 	// fmt.Println(finalArgs)
 	ok := true
-	stdout, err, code := config.Runner.RunCmd(echo.Debug, config.mkvpropeditExe, finalArgs...)
+	stdout, err, code := config.Runner.RunCmd(echo.Debug, config.mkvpropedit.exe, finalArgs...)
 
 	if code < 0 {
 		fmt.Println(code)
@@ -64,4 +66,36 @@ func CleanFile(file string) bool {
 	}
 
 	return ok
+}
+
+// return OS specific executable name
+// also
+func getExe(executable string) string {
+	if runtime.GOOS == "windows" {
+		return fmt.Sprintf("%v.exe", executable)
+	}
+	return executable
+}
+
+func newTool(name, site string) tool {
+	return tool{exe: getExe(name), site: site}
+}
+
+// Loops through the list if any executable is not found in the system path it is logged and the script exits with a 1 failure.
+func verifyTools(tools []tool) {
+	notFound := false
+
+	for _, t := range tools {
+		path, err := exec.LookPath(t.exe)
+		if err != nil {
+			config.Logger.Fechof(echo.Red, echo.Error, os.Stderr, "'%v' not found. Check '%v' for installation instructions.\n", t.exe, t.site)
+			notFound = true
+		} else {
+			config.Logger.Echof(echo.Green, echo.Debug, "'%v' found in system path at '%v'.\n", t.exe, path)
+		}
+	}
+
+	if notFound {
+		os.Exit(1)
+	}
 }

@@ -34,8 +34,8 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=$SCRIPT_DIR
-ExecStart=$DNS_SCRIPT
+WorkingDirectory="$SCRIPT_DIR"
+ExecStart="$DNS_SCRIPT"
 
 [Install]
 WantedBy=multi-user.target

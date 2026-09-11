@@ -26,5 +26,4 @@
     # build the image from the dockerfile
     docker build -t adrianbaraka/caddy-dnsexit:latest .
     ````
-
-### File Structure
+- 

@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
-	"github.com/adrianbaraka/goutils/cli"
 	"github.com/adrianbaraka/goutils/echo"
 )
 
@@ -64,18 +64,13 @@ func handleFile(filename string) (bool, bool, int64, int64, error) {
 //
 //	checks the first audio track
 func getNumberOfChannels(filename string) (int, error) {
-	err := cli.RequireTools(config.ffprobeExe)
-	if err != nil {
-		return 0, err
-	}
-
 	args := make([]string, 0, 9)
 	args = append(args, "-v", "error")                                                                   // suppress to only errors
 	args = append(args, "-select_streams", "a:0")                                                        // first audio stream
 	args = append(args, "-show_entries", "stream=channels", "-of", "default=noprint_wrappers=1:nokey=1") // get no of channels only
 	args = append(args, filename)
 
-	stdout, err, exitCode := config.Runner.RunCmd(echo.Info, config.ffprobeExe, args...)
+	stdout, err, exitCode := config.Runner.RunCmd(echo.Info, config.ffprobe.exe, args...)
 	if exitCode != 0 {
 		return 0, err
 	}
@@ -89,11 +84,6 @@ func getNumberOfChannels(filename string) (int, error) {
 // Downmix to stereo the given file
 // Returns the newfile location cleandir and error if it occurred
 func downmix(filename string) (string, string, error) {
-	err := cli.RequireTools(config.ffmpegExe)
-	if err != nil {
-		return "", "", err
-	}
-
 	cleanFile, cleanDir, err := makeCleanDir(filename)
 
 	if err != nil {
@@ -114,7 +104,7 @@ func downmix(filename string) (string, string, error) {
 	args = append(args, cleanFile)                      // output file
 	args = append(args, "-y")                           // overwrite
 
-	err, exitCode := config.Runner.RunCmdStreamer(echo.Info, config.ffmpegExe, args...)
+	err, exitCode := config.Runner.RunCmdStreamer(echo.Info, config.ffmpeg.exe, args...)
 	//err, exitCode := r.RunCmd(echo.Info, "ffmpeg", args...)
 	if exitCode != 0 {
 		return "", "", err
@@ -124,16 +114,12 @@ func downmix(filename string) (string, string, error) {
 }
 
 func updateStats(filename string) error {
-	err := cli.RequireTools(config.mkvpropeditExe)
-	if err != nil {
-		return err
-	}
 	//mkvpropedit --add-track-statistics-tags output.mkv
 	args := make([]string, 0, 2)
 	args = append(args, "--add-track-statistics-tags") // suppress to only errors
 	args = append(args, filename)
 
-	_, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvpropeditExe, args...)
+	_, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvpropedit.exe, args...)
 	if exitCode != 0 {
 		return err
 	}
@@ -214,9 +200,34 @@ func handleBackup(newMediafile string, oldMediaFile string, cleanDir string) err
 }
 
 // return OS specific executable name
+// also
 func getExe(executable string) string {
 	if runtime.GOOS == "windows" {
 		return fmt.Sprintf("%v.exe", executable)
 	}
 	return executable
+}
+
+
+func newTool(name, site string) tool {
+	return tool{exe: getExe(name), site: site}
+}
+
+// Loops through the list if any executable is not found in the system path it is logged and the script exits with a 1 failure.
+func verifyTools(tools []tool) {
+	notFound := false
+
+	for _, t := range tools {
+		path, err := exec.LookPath(t.exe)
+		if err != nil {
+			config.Logger.Fechof(echo.Red, echo.Error, os.Stderr, "'%v' not found. Check '%v' for installation instructions.\n", t.exe, t.site)
+			notFound = true
+		} else {
+			config.Logger.Echof(echo.Green, echo.Debug, "'%v' found in system path at '%v'.\n", t.exe, path)
+		}
+	}
+
+	if notFound {
+		os.Exit(1)
+	}
 }

@@ -13,9 +13,12 @@ var doctorCmd = &cobra.Command{
 	Short: "Verify the required tools are available in your system path, ie ffmpeg, ffprobe and mkvpropedit.",
 	Run: func(cmd *cobra.Command, args []string) {
 		var tools []tool
-		tools = append(tools, config.ffmpeg)
-		tools = append(tools, config.ffprobe)
-		tools = append(tools, config.mkvpropedit)
+		tools = append(tools, config.mkvextract)
+		tools = append(tools, config.mkvmerge)
 		verifyTools(tools)
 	},
+}
+
+func init() {
+	rootCmd.AddCommand(doctorCmd)
 }

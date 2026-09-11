@@ -40,4 +40,10 @@ var fileCmd = &cobra.Command{
 
 func init() {
 	processCmd.AddCommand(fileCmd)
+
+	fileCmd.PersistentFlags().StringVar(&config.externalSub, "external-sub", "", "The path to an external sutitle file to merge.")
+	fileCmd.RegisterFlagCompletionFunc("external-sub", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// suggest srt files
+		return []string{"srt"}, cobra.ShellCompDirectiveFilterFileExt
+	})
 }

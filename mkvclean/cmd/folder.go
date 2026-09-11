@@ -58,7 +58,7 @@ var folderCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(folderCmd)
+	processCmd.AddCommand(folderCmd)
 
 	// Here you will define your flags and configuration settings.
 

@@ -36,7 +36,7 @@ var fileCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(fileCmd)
+	processCmd.AddCommand(fileCmd)
 
 	// Here you will define your flags and configuration settings.
 

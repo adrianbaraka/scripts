@@ -16,6 +16,11 @@ var (
 	color          string
 )
 
+type tool struct {
+	exe  string
+	site string
+}
+
 type AppConfig struct {
 	Logger *echo.Logger
 	Runner *cli.RunCmdConfig
@@ -24,9 +29,9 @@ type AppConfig struct {
 	bytes  bool
 
 	// executables
-	ffmpegExe      string
-	ffprobeExe     string
-	mkvpropeditExe string
+	ffmpeg      tool
+	ffprobe     tool
+	mkvpropedit tool
 }
 
 var config AppConfig
@@ -69,9 +74,9 @@ var rootCmd = &cobra.Command{
 			os.Setenv("NO_COLOR", "true")
 		}
 
-		config.ffmpegExe = getExe("ffmpeg")
-		config.ffprobeExe = getExe("ffprobe")
-		config.mkvpropeditExe = getExe("mkvpropedit")
+		config.ffmpeg = newTool("ffmpeg", "https://ffmpeg.org/")
+		config.ffprobe = newTool("ffprobe", "https://ffmpeg.org/ffprobe.html")
+		config.mkvpropedit = newTool("mkvpropedit", "https://mkvtoolnix.download/")
 
 		config.Logger = echo.NewLogger(verbosity, os.Stdout)
 		// the mktoolinix clis dont write errors to stderr so can't stream output in color so either color or stream but not both

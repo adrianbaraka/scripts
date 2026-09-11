@@ -10,6 +10,14 @@ import (
 var processCmd = &cobra.Command{
 	Use:   "process",
 	Short: "Process video file(s).",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+		var tools []tool
+		tools = append(tools, config.ffmpeg)
+		tools = append(tools, config.ffprobe)
+		tools = append(tools, config.mkvpropedit)
+		verifyTools(tools)
+	},
 }
 
 func init() {
