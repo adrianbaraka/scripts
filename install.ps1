@@ -15,7 +15,9 @@ Push-Location $App
 try {
     # build the app
     go mod tidy
-    go build -o "$App.exe" main.go
+    # strips symbols etc smaller binary
+    # go build -ldflags="-s -w" -o "$App.exe" main.go
+    go build -o "$App.exe" main.go 
     Write-Host "Compiled $App"
 
     # shell completions

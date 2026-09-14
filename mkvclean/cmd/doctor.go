@@ -14,6 +14,7 @@ var doctorCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var tools []tool
 		tools = append(tools, config.mkvpropedit)
+		tools = append(tools, config.mkvmerge)
 		verifyTools(tools)
 	},
 }

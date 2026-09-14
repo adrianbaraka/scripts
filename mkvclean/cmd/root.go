@@ -11,11 +11,10 @@ import (
 )
 
 var (
-	verbose        bool
-	quiet          bool
-	mkvpropeditexe string
-	language       string
-	color          string
+	verbose  bool
+	quiet    bool
+	language string
+	color    string
 )
 
 type tool struct {
@@ -27,6 +26,7 @@ type AppConfig struct {
 	Logger      *echo.Logger
 	Runner      *cli.RunCmdConfig
 	mkvpropedit tool
+	mkvmerge    tool
 	language    string
 	dryRun      bool
 	backup      bool
@@ -80,6 +80,7 @@ Example:
 		config.Runner = cli.NewRunner(verbosity, false, true, false)
 
 		config.mkvpropedit = newTool("mkvpropedit", "https://mkvtoolnix.download/downloads.html")
+		config.mkvmerge = newTool("mkvmerge", "https://mkvtoolnix.download/downloads.html")
 		config.language = language
 
 		return nil

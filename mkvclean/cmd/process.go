@@ -14,6 +14,7 @@ var processCmd = &cobra.Command{
 
 		var tools []tool
 		tools = append(tools, config.mkvpropedit)
+		tools = append(tools, config.mkvmerge)
 		verifyTools(tools)
 	},
 }

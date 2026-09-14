@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,43 +12,58 @@ import (
 )
 
 // uses lang, mkvpropedditexe , logger and runner defined in root.go
-
 func CleanFile(file string) bool {
-	// define the commands
-	lang := fmt.Sprintf("language=%v", config.language)
-	commands := [][]string{
-		{"-e", "track:v1", "-s", "name=", "-s", "language=und"},
-		{"-e", "track:a1", "-s", "name=", "--set", lang},
-		{"-e", "track:s1", "-s", "name=", "--set", "language=en", "--set", "flag-default=1"},
-
-		{"--delete-attachment", "mime-type:image/png"},
-		{"--delete-attachment", "mime-type:image/jpg"},
-		{"--delete-attachment", "mime-type:image/jpeg"},
-
-		{"--delete-attachment", "mime-type:application/x-truetype-font"},
-		{"--delete-attachment", "mime-type:font/ttf"},
-		{"--delete-attachment", "mime-type:application/vnd.ms-opentype"},
-		{"--delete-attachment", "mime-type:font/otf"},
-
-		{"--edit", "info", "--set", "title="},
-
-		{"--tags", "all:"},
+	tracks, err := getTracks(file)
+	if err != nil {
+		config.Logger.Fecholn(echo.Red, echo.Error, os.Stderr, err.Error())
+		return false
 	}
+
+	lang := fmt.Sprintf("language=%v", config.language)
+
+	var commands [][]string
+
+	// loop through every track (1-indexed, mkvpropedit style) and clear its name
+	for i := range tracks {
+		commands = append(commands, []string{
+			"--edit", fmt.Sprintf("track:%d", i+1),
+			"--set", "name=",
+		})
+	}
+
+	// type-specific tweaks stay as-is
+	commands = append(commands,
+		[]string{"-e", "track:v1", "-s", "language=und"},
+		[]string{"-e", "track:a1", "--set", lang},
+		[]string{"-e", "track:s1", "--set", "language=en", "--set", "flag-default=1"},
+
+		[]string{"--delete-attachment", "mime-type:image/png"},
+		[]string{"--delete-attachment", "mime-type:image/jpg"},
+		[]string{"--delete-attachment", "mime-type:image/jpeg"},
+
+		[]string{"--delete-attachment", "mime-type:application/x-truetype-font"},
+		[]string{"--delete-attachment", "mime-type:font/ttf"},
+		[]string{"--delete-attachment", "mime-type:application/vnd.ms-opentype"},
+		[]string{"--delete-attachment", "mime-type:font/otf"},
+
+		[]string{"--edit", "info", "--set", "title="},
+		[]string{"--tags", "all:"},
+	)
 
 	finalArgs := []string{file}
 	for _, cmdGroup := range commands {
 		finalArgs = append(finalArgs, cmdGroup...)
 	}
-	// fmt.Println(finalArgs)
+
 	ok := true
-	stdout, err, code := config.Runner.RunCmd(echo.Debug, config.mkvpropedit.exe, finalArgs...)
+	stdout, err2, code := config.Runner.RunCmd(echo.Debug, config.mkvpropedit.exe, finalArgs...)
 
 	if code < 0 {
 		fmt.Println(code)
 		ok = false
-		config.Logger.Fecholn(echo.Red, echo.Error, os.Stderr, err)
+		config.Logger.Fecholn(echo.Red, echo.Error, os.Stderr, err2)
 	}
-	//error := false
+
 	for _, line := range stdout {
 		c := echo.Green
 		l := echo.Debug
@@ -55,7 +71,6 @@ func CleanFile(file string) bool {
 		if strings.HasPrefix(line, "Warning") {
 			c = echo.Yellow
 		}
-
 		if strings.HasPrefix(line, "Error") {
 			c = echo.Red
 			l = echo.Error
@@ -66,6 +81,32 @@ func CleanFile(file string) bool {
 	}
 
 	return ok
+}
+
+func getTracks(file string) ([]mkvTrack, error) {
+	stdout, _, code := config.Runner.RunCmd(echo.Debug, config.mkvmerge.exe, "-J", file)
+	if code != 0 {
+		return nil, fmt.Errorf("mkvmerge -J failed with code %d", code)
+	}
+
+	raw := strings.Join(stdout, "\n")
+	var info mkvInfo
+	if err := json.Unmarshal([]byte(raw), &info); err != nil {
+		return nil, fmt.Errorf("failed to parse mkvmerge JSON: %w", err)
+	}
+	return info.Tracks, nil
+}
+
+type mkvTrack struct {
+	Type       string `json:"type"`
+	Properties struct {
+		UID      uint64 `json:"uid"`
+		Language string `json:"language"`
+	} `json:"properties"`
+}
+
+type mkvInfo struct {
+	Tracks []mkvTrack `json:"tracks"`
 }
 
 // return OS specific executable name
