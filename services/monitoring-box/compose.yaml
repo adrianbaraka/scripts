@@ -12,7 +12,7 @@ services:
       DOMAIN: ${DOMAIN}
       DNS_EXIT_TOKEN: ${DNS_EXIT_TOKEN}
     volumes:
-      - ./files/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
