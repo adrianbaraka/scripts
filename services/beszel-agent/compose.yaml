@@ -1,6 +1,6 @@
 services:
   beszel-agent:
-    image: henrygd/beszel-agent:0.21.0
+    image: henrygd/beszel-agent:0.21.1
     container_name: beszel-agent
     restart: unless-stopped
     network_mode: host
@@ -9,6 +9,10 @@ services:
         # systemd
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro
       - beszel_agent_data:/var/lib/beszel-agent
+        # monitor disks
+      - /mnt/061CBD6D1CBD57FF:/extra-filesystems/sda1-data:ro
+      - /mnt/FE4E6AD04E6A816F:/extra-filesystems/sda2-recovery:ro
+      - /mnt/98A6A420A6A4013C:/extra-filesystems/sdb3-storage:ro
       - ./keys.txt:/keys.txt:ro
     environment:
       LISTEN: "${TAILSCALE_IP}:45876"

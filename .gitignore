@@ -6,3 +6,4 @@
 /services/scrutiny/influxdb
 /services/traefik-all/certs
 services/home/update-dns.log
+services/beszel-agent/keys.txt
