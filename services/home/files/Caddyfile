@@ -72,4 +72,7 @@
 	handle @portainer {
 		reverse_proxy portainer:9000
 	}
+
+	@web host web.{$DOMAIN}
+	handle 
 }

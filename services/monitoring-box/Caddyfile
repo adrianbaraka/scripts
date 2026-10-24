@@ -1,0 +1,28 @@
+
+{
+    email {$EMAIL}
+}
+
+:8080 {
+    respond /health "OK" 200
+}
+
+*.{$DOMAIN}, {$DOMAIN} {
+    tls {
+        dns dnsexit {
+            api_token {$DNS_EXIT_TOKEN}
+        }
+        dns_ttl 5m
+        resolvers 1.1.1.1 8.8.8.8
+    }
+
+    @beszel host beszel.{$DOMAIN}
+    handle @beszel {
+        reverse_proxy beszel:8090
+    }
+
+    @uptime host uptime.{$DOMAIN}
+    handle @uptime {
+        reverse_proxy uptime-kuma:3001
+    }
+}

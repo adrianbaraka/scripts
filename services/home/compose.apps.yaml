@@ -1,6 +1,6 @@
 services:
   jellyfin:
-    image: jellyfin/jellyfin:12.0
+    image: jellyfin/jellyfin:12.3
     container_name: jellyfin
     ports:
       - "${JELLYFIN_PORT}:8096"
@@ -13,14 +13,20 @@ services:
       start_period: 30s
     networks:
       - home
+    environment:
+      - LIBVA_DRIVER_NAME=iHD
+      - TZ=${TZ}
     volumes:
       - "${JELLYFIN_CACHE}:/cache"
       - "${JELLYFIN_CONFIG}:/config"
       - "${JELLYFIN_MEDIA}:/media"
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
     group_add:
       - "992" #`getent group render`
+    cpuset: "0,2"
   kavita:
-    image: jvmilazz0/kavita:0.9.0.2
+    image: jvmilazz0/kavita:0.9.1
     container_name: kavita
     volumes:
       - "${KAVITA_DATA}:/books"

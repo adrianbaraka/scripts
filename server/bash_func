@@ -1,0 +1,120 @@
+# shellcheck shell=bash
+
+# Aliases
+alias ..='cd ..'
+alias c='clear'
+alias chmod='chmod -v'
+alias cp='cp -v'
+alias l='ls -CF'
+alias la='ls -A'
+alias ll='ls -l'
+alias ls='ls --color=auto'
+alias mv='mv -v'
+alias please='sudo'
+alias py='python3'
+alias python='python3'
+alias rm='rm -i'
+alias ~='cd ~'
+alias dir='dir --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias grep='grep --color=auto'
+alias bat='batcat'
+alias rsync='rsync -v'
+
+# functions
+
+cdl() {
+    if (($# == 0)); then
+        echo "Usage: cdl <directory>"
+        return 1
+    fi
+
+    cd "$1" || return 1
+    ls
+}
+
+#Update and upgrade packages
+update(){
+    sudo apt update
+    sudo apt upgrade
+}
+
+#-----------------------------------------------------------------------------------------
+
+# bash prompt
+setPrompt() {
+    local exitCode=$?
+    local space branch
+    
+    PS1=""
+    space=""
+
+    if ((exitCode != 0)); then
+        PS1+='\[\e[91m\]⏺\[\e[0m\]'
+        # add a space in the bottom to compensate for this
+        space=" "
+    fi
+
+    PS1+="\[\e[92;1m\]┌──"
+
+    # Include the virtual environment name if it exists
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        envName="${VIRTUAL_ENV##*/}"
+        #echo "$envName"
+        PS1+="\[\e[97m\](\[\e[94m\]${envName}\[\e[97m\]) "
+    fi
+
+    # show the hostname if remote
+    if [[ -n "$IS_REMOTE" ]]; then
+        PS1+="(\[\e[92;1;3m\]\u\[\e[0;92m\]@\[\e[2m\]\H\[\e[0m\])\[\e[1m\]-[\[\e[38;5;38;3m\]\w\[\e[23;97m\]]\[\e[0m\] "
+    else
+        PS1+="(\[\e[92;1;3m\]\u\[\e[0m\])\[\e[1m\]-[\[\e[38;5;38;3m\]\w\[\e[23;97m\]]\[\e[0m\]"
+    fi
+
+    # Include git branch if a git repo
+    branch=$(git branch --show-current 2>/dev/null)
+    if [[ -n "$branch" ]]; then
+        PS1+="(\[\e[93m\]${branch}\[\e[0m\])"
+    fi
+
+    PS1+="\n${space}\[\e[92;1m\]└─\[\e[0m\]👀\[\e[38;5;202;1m\] \[\e[0m\]"
+}
+PROMPT_COMMAND=setPrompt
+
+
+#-----------------------------------------------------------------------------------------
+
+# [Home PC]
+
+alias venv='source /home/abc/Utilities/myenv/bin/activate'
+alias files='xdg-open .'
+
+
+#termux specific
+#alias notes='cdl /data/data/com.termux/files/home/storage/shared/Documents/configuration'
+
+#-------------------------------------------------------------------------------------------------
+
+#Root PS1 command
+#PS1='┌──${debian_chroot:+($debian_chroot)} [\[\e[38;5;45;3m\]\t\[\e[0m\]] \[\e[91m\](\[\e[1m\]\u\[\e[22m\]@\h)\[\e[0m\]:[\[\e[91;3m\]\w\[\e[0m\]]\n└─\[\e[91m\]\$\[\e[0m\] '
+
+
+# custom additions
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
+export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig:/usr/lib/pkgconfig
+export CHROME_EXECUTABLE=/usr/bin/google-chrome
+
+# add ssh-keys assumes ssh-agent is running
+ssh-add -q ~/.ssh/github
+
+export PATH="$PATH:/$HOME/.local/bin:$HOME/go/bin"
+export PATH="$HOME/.bun/bin:$PATH"
+# export HOMEBREW_ASK=1
+
+for file in /home/linuxbrew/.linuxbrew/etc/bash_completion.d/*; do
+    if [[ -f "$file" ]]; then
+        # shellcheck disable=SC1090
+        source "$file"
+    fi
+done

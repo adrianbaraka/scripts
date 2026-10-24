@@ -1,0 +1,89 @@
+services:
+  caddy:
+    image: adrianbaraka/caddy-dnsexit:2.11.2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "${TAILSCALE_IP}:443:443"
+      - "${TAILSCALE_IP}:8080:8080"
+    environment:
+      TZ: ${TZ}
+      EMAIL: ${EMAIL}
+      DOMAIN: ${DOMAIN}
+      DNS_EXIT_TOKEN: ${DNS_EXIT_TOKEN}
+    volumes:
+      - ./files/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.5.7-slim
+    container_name: uptime-kuma
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      UMASK: "0022"
+    volumes:
+      - uptime_kuma_data:/app/data
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  beszel:
+    image: henrygd/beszel:0.21.1
+    container_name: beszel
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      APP_URL: https://beszel.${DOMAIN}
+    volumes:
+      - beszel_data:/beszel_data
+      - beszel_socket:/beszel_socket
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "/beszel", "health", "--url", "http://localhost:8090"]
+      interval: 2m
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  monitoring:
+    name: monitoring
+
+volumes:
+  caddy_data:
+  caddy_config:
+  uptime_kuma_data:
+  beszel_data:
+  beszel_socket:

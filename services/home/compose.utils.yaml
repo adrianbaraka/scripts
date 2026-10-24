@@ -1,7 +1,7 @@
 services:
     pihole:
         container_name: pihole
-        image: pihole/pihole:2026.07.2
+        image: pihole/pihole:2026.10.0
         ports:
             - "53:53/tcp"
             - "53:53/udp"
@@ -26,7 +26,7 @@ services:
             retries: 3
             start_period: 30s
     dozzle:
-        image: amir20/dozzle:v10.6.10
+        image: amir20/dozzle:v11.3.5
         container_name: dozzle
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
@@ -53,7 +53,7 @@ services:
             #- DOZZLE_AUTH_PROVIDER=simple
 
     beszel:
-        image: henrygd/beszel:0.18.7
+        image: henrygd/beszel:0.21.1
         container_name: beszel
         restart: unless-stopped
         environment:
@@ -90,7 +90,7 @@ services:
             - home
 
     uptime-kuma:
-        image: louislam/uptime-kuma:2.2.1-slim
+        image: louislam/uptime-kuma:2.5.7-slim
         container_name: uptime-kuma
         restart: unless-stopped
         # ports:
@@ -116,7 +116,7 @@ services:
             - ts-uptime-kuma
 
     homepage:
-        image: ghcr.io/gethomepage/homepage:v1.13.1
+        image: ghcr.io/gethomepage/homepage:v2.7.0
         container_name: homepage
         environment:
             - HOMEPAGE_VAR_JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
@@ -139,7 +139,7 @@ services:
         restart: unless-stopped
 
     portainer:
-        image: portainer/portainer-ce:2.41.1-alpine
+        image: portainer/portainer-ce:2.45.3-alpine
         container_name: portainer
         restart: unless-stopped
         security_opt:

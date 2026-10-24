@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/adrianbaraka/goutils/echo"
 )
@@ -71,56 +72,92 @@ func getNumberOfChannels(filename string) (int, error) {
 	args = append(args, filename)
 
 	stdout, err, exitCode := config.Runner.RunCmd(echo.Info, config.ffprobe.exe, args...)
-	if exitCode != 0 {
+	if err != nil || exitCode != 0 {
+		if err == nil {
+			err = fmt.Errorf("ffprobe exited with code %d", exitCode)
+		}
 		return 0, err
 	}
-	// it is possible there are no audio channels
-	if len(stdout) == 0 {
-		return 0, fmt.Errorf("The file possibly has no audio files.")
+
+	// it is possible there are no audio streams
+	if len(stdout) == 0 || strings.TrimSpace(stdout[0]) == "" {
+		return 0, fmt.Errorf("no audio stream found in %v", filename)
 	}
-	return strconv.Atoi(stdout[0])
+
+	return strconv.Atoi(strings.TrimSpace(stdout[0]))
 }
 
-// Downmix to stereo the given file
-// Returns the newfile location cleandir and error if it occurred
+// Downmix to stereo the given file.
+// Returns the new file location, the clean dir, and an error if one occurred.
 func downmix(filename string) (string, string, error) {
 	cleanFile, cleanDir, err := makeCleanDir(filename)
-
 	if err != nil {
 		return "", "", err
 	}
 
-	args := make([]string, 0, 15)
+	args := make([]string, 0, 32)
+	args = append(args, "-y") // overwrite
+
 	if config.Runner.LogLevel < echo.Trace {
 		args = append(args, "-loglevel", "error") // suppress to only errors
 	}
-
 	if config.Runner.LogLevel >= echo.Info {
 		args = append(args, "-stats") // show progress
 	}
+
 	args = append(args, "-i", filename)
-	args = append(args, "-c:v", "copy", "-c:s", "copy") // copy video and subs
-	args = append(args, "-ac", "2", "-c:a", "aac")      // downmix to 2 channels
-	args = append(args, cleanFile)                      // output file
-	args = append(args, "-y")                           // overwrite
+
+	// Stream selection: keep everything useful, but make optional types
+	// non-fatal with "?" so odd files don't make ffmpeg bail out.
+	args = append(args,
+		"-map", "0:v", // all video
+		"-map", "0:a?", // all audio tracks
+		"-map", "0:s?", // all subtitle tracks
+		"-map", "0:t?", // attachments (fonts for styled subs)
+	)
+
+	// Video and subs are passed through untouched.
+	args = append(args, "-c:v", "copy", "-c:s", "copy", "-c:t", "copy")
+
+	// Audio: downmix to stereo with the center (dialogue) at full level and
+	// surrounds pulled back. The downmix must happen inside the filter via
+	// ocl=stereo, otherwise ffmpeg's auto-inserted resampler ignores the mix levels.
+	args = append(args,
+		"-af", "aresample=out_chlayout=stereo:center_mix_level=1.0:surround_mix_level=0.5",
+		"-c:a", "aac",
+		"-b:a", "160k",
+	)
+
+	args = append(args, cleanFile) // output file
 
 	err, exitCode := config.Runner.RunCmdStreamer(echo.Info, config.ffmpeg.exe, args...)
-	//err, exitCode := r.RunCmd(echo.Info, "ffmpeg", args...)
-	if exitCode != 0 {
+	if err != nil || exitCode != 0 {
+		if err == nil {
+			err = fmt.Errorf("ffmpeg exited with code %d", exitCode)
+		}
+		// don't leave a half-written file behind (ffmpeg may have failed before creating it)
+		if _, statErr := fileSize(cleanFile); statErr == nil {
+			rmFile(cleanFile)
+		}
+		rmFile(cleanDir) // os.Remove only succeeds if the dir is empty, so this is safe
 		return "", "", err
 	}
 
 	return cleanFile, cleanDir, nil
 }
 
+// adds the track statistics tags (bitrate, duration, etc) back to the mkv
 func updateStats(filename string) error {
 	//mkvpropedit --add-track-statistics-tags output.mkv
 	args := make([]string, 0, 2)
-	args = append(args, "--add-track-statistics-tags") // suppress to only errors
+	args = append(args, "--add-track-statistics-tags")
 	args = append(args, filename)
 
 	_, err, exitCode := config.Runner.RunCmd(echo.Debug, config.mkvpropedit.exe, args...)
-	if exitCode != 0 {
+	if err != nil || exitCode != 0 {
+		if err == nil {
+			err = fmt.Errorf("mkvpropedit exited with code %d", exitCode)
+		}
 		return err
 	}
 	return nil
@@ -207,7 +244,6 @@ func getExe(executable string) string {
 	}
 	return executable
 }
-
 
 func newTool(name, site string) tool {
 	return tool{exe: getExe(name), site: site}
