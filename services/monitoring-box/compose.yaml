@@ -4,8 +4,8 @@ services:
     container_name: caddy
     restart: unless-stopped
     ports:
+      - "${TAILSCALE_IP}:80:80"
       - "${TAILSCALE_IP}:443:443"
-      - "${TAILSCALE_IP}:8080:8080"
     environment:
       TZ: ${TZ}
       EMAIL: ${EMAIL}

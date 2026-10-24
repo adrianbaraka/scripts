@@ -1,4 +1,3 @@
-
 {
     email {$EMAIL}
 }
@@ -7,6 +6,17 @@
     respond /health "OK" 200
 }
 
+# Redirect HTTP to HTTPS for your domain
+http://*.{$DOMAIN}, http://{$DOMAIN} {
+    redir https://{host}{uri} permanent
+}
+
+# Catch-all for unknown hosts and direct IP requests
+:443 {
+    respond "404 - Not Found" 404
+}
+
+# Main domain and subdomains
 *.{$DOMAIN}, {$DOMAIN} {
     tls {
         dns dnsexit {
@@ -25,4 +35,7 @@
     handle @uptime {
         reverse_proxy uptime-kuma:3001
     }
+
+    # Any other path or hostname within this site
+    respond "404 - Not Found" 404
 }

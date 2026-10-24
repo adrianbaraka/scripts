@@ -9,6 +9,14 @@
 :8080 {
 	respond /health "OK" 200
 }
+http://*.{$DOMAIN}, http://{$DOMAIN} {
+    redir https://{host}{uri} permanent
+}
+
+# Catch-all for unknown hosts and direct IP requests
+:443 {
+    respond "404 - Not Found" 404
+}
 
 # The Wildcard Block
 *.{$DOMAIN}, {$DOMAIN} {
@@ -73,6 +81,9 @@
 		reverse_proxy portainer:9000
 	}
 
-	@web host web.{$DOMAIN}
-	handle 
+	# @web host web.{$DOMAIN}
+	# handle 
+
+	# Any other path or hostname within this site
+    respond "404 - Not Found" 404
 }
